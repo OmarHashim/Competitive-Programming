@@ -1,13 +1,7 @@
-/*
-    WA, don't know why
-    problem statement is a bit vague
-    tried to think about cases of multi edges/ self edges, but cant find what is wrong with the solution
-    
-    idea : 
+/*  
     remove edges that are not rewarding since they are never used anyway
-    then run bellman ford, if SP after first run = oo, then there is no path, if there is a path
-    run bellman ford once more, if sp decrease, then it is unbound
-    i am running bellman ford with 2n iterations just as a high safety factor
+    then run bellman ford, if SP after first run = oo, then there is no path, if there is a path,
+    check whether it is -oo or not
 */
 
 #include<bits/stdc++.h>
@@ -32,28 +26,34 @@ struct edge{
 };
 vector<edge> adj[N];
 int n,m,a,b;
-void work(vector<ii> &dist){
-	for(int i=0;i<=2*n;++i)
+void work(vector<ii> &dist,int t){
+	for(int i=0;i<n;++i)
 		for(int j=0;j<n;++j){
-			if(dist[j].first==1e9)continue;
+			if(dist[j].second==1e9)continue;
 			for(int k=0;k<adj[j].size();++k){
 				int to=adj[j][k].to;
 				int cost=adj[j][k].cost;
 				int len=adj[j][k].len;
-				dist[to]=min(dist[to],ii(dist[j].first+cost,dist[j].second+len));
+				ii nw=ii(dist[j].first+cost,dist[j].second+len);
+				if(nw<dist[to]){
+					if(!t)dist[to]=nw;
+					else dist[to]=ii(-1e9,-1e9);
+				}
+
 			}
 		}
 }
 void bellman(){
 	vector<ii> dist(n,ii(1e9,1e9));
 	dist[a]=ii(0,0);
-	work(dist);
+	work(dist,0);
 	if(dist[b]==ii(1e9,1e9)){
 		puts("VOID");
 		return;
 	}
 	ii cur=dist[b];
-	work(dist);
+	work(dist,1);
+	//lop(i,n)printf("%d %d %d\n",i,dist[i].first,dist[i].second);
 	if(dist[b]!=cur){
 		puts("UNBOUND");
 	}
@@ -68,20 +68,16 @@ string x;
 int main(){
 #ifndef ONLINE_JUDGE
 	freopen("i.txt","r",stdin);
+	//freopen("o.txt","w",stdout);
 #endif
 	while(~sc(n)){
 		sc(m),sc(a),sc(b);
 		init();
 		lop(i,m){
-			cin>>x;
-			lop(i,x.size())if(!isdigit(x[i])&&x[i]!='-')x[i]=' ';
-			stringstream ss(x);
 			int u,v,cuv,len,cvu;
-			ss>>u>>v>>cuv>>len>>cvu;
+			scanf(" (%d,%d,%d[%d]%d)",&u,&v,&cuv,&len,&cvu);
 			adj[u].push_back(edge(cuv,len,v));
 			adj[v].push_back(edge(cvu,len,u));
-
-
 		}
 		lop(i,n){
 			sort(adj[i].begin(),adj[i].end());
