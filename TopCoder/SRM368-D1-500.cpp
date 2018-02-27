@@ -1,3 +1,6 @@
+/*
+   if polylines intersect, add edge between them and count components
+*/
 #include<bits/stdc++.h>
 using namespace std;
 
