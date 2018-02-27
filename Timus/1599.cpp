@@ -1,4 +1,7 @@
-//TLE
+/*
+    imagine ray p -> (oo,p.Y)
+    then answer increases/decreases as segments cross this ray 
+*/
 #include<bits/stdc++.h>
 using namespace std;
 
@@ -9,7 +12,7 @@ using namespace std;
 typedef pair<int, int> ii;
 typedef pair<ll, ll> pll;
 
-typedef complex<long double> point;
+typedef complex<ll> point;
 #define sz(a) ((int)(a).size())
 #define all(n) (n).begin(),(n).end()
 #define EPS 1e-9
@@ -34,8 +37,8 @@ typedef complex<long double> point;
 const long double PI=acos(-1.0);
 
 bool read(point & p){
-	double x,y;
-	if(~scanf(" %lf %lf",&x,&y)){
+	int x,y;
+	if(~scanf(" %d %d",&x,&y)){
 		p=point(x,y);
 		return 1;
 	}
@@ -45,11 +48,6 @@ const int N=5010;
 int n,m;
 point arr[N];
 point p;
-inline long double fix(long double v){
-	if(v<-1)return -1;
-	if(v>1)return 1;
-	return v;
-}
 int main(){
 #ifndef ONLINE_JUDGE
 	freopen("i.txt","r",stdin);
@@ -57,30 +55,26 @@ int main(){
 	sc(n);
 	lop(i,n)read(arr[i]);
 	sc(m);
-	lop(i,m){
+	while(m--){
 		read(p);
-		long double out=0;
+		int out=0;
 		bool any=0;
 		lop(i,n){
 			point a=arr[i];
 			point b=(i==n-1?arr[0]:arr[i+1]);
 			point ab=vec(a,b);
-			point pa=vec(p,a);
-			point pb=vec(p,b);
-			long double lpa=length(pa);
-			long double lpb=length(pb);
-				if(fabs(length(ab)-lpa-lpb)<EPS){
-					any=1;
-					break;
-				}
-			pa=pa/lpa;
-			pb=pb/lpb;
-			point con=conj(pa)*(pb);
-			long double theta=acos(fix(con.X)); // dot product
-			if(con.Y>=0)out+=theta; // cross product
-			else out-=theta;
+			point ap=vec(a,p);
+			point bp=vec(b,p);
+			point ba=vec(b,a);
+			if(cross(ap,ab)==0&&dot(ap,ab)>=0&&dot(bp,ba)>=0){
+				any=1;
+				break;
+			}
+			if(a.Y<=p.Y)out+=(b.Y>p.Y)&&(cross(ab,ap)>0);
+			else out-=(b.Y<=p.Y)&&(cross(ab,ap)<0);
+
 		}
 		if(any)puts("EDGE");
-		else printf("%d\n",int(out/(2*PI)));
+		else printf("%d\n",out);
 	}
 }
