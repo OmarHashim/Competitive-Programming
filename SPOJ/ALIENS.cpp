@@ -35,113 +35,94 @@ typedef complex<long double> point;
 #define perp(a) (point(-(a).Y,(a).X))
 #define colliner pointOnLine
 
-const long double pi=acos(-1.0);
-
-bool pointOnLine(const point& a, const point& b, const point& p) {
-	return fabs(cross(vec(a,b),vec(a,p))) < EPS;
-}
-
-struct cmp {
-	point about;
-	cmp(point c) {
-		about = c;
-	}
-	bool operator()(const point& p, const point& q) const {
-		double cr = cross(vec(about,p), vec(about,q));
-		if (fabs(cr) < EPS)
-			return make_pair(p.Y, p.X) < make_pair(q.Y, q.X);
-		return cr > 0;
-	}
+enum STATE {
+	IN, OUT, BOUNDRY
 };
-void sortAntiClockWise(vector<point>& pnts) {
-	point mn(1 / 0.0, 1 / 0.0);
-	for (int i = 0; i < sz(pnts); i++)
-		if (make_pair(pnts[i].Y, pnts[i].X) < make_pair(mn.Y, mn.X))
-			mn = pnts[i];
-	sort(all(pnts), cmp(mn));
+
+bool intersect(const point &a, const point &b, const point &p, const point &q,
+		point &ret) {
+//handle degenerate cases
+	long double d1 = cross(p - a, b - a);
+	long double d2 = cross(q - a, b - a);
+	ret = (d1 * q - d2 * p) / (d1 - d2);
+	if (fabs(d1 - d2) > EPS)
+		return 1;
+	return 0;
 }
 
-void convexHull(vector<point> pnts, vector<point> &convex) {
-	sortAntiClockWise(pnts);
-	convex.clear();
-	convex.push_back(pnts[0]);
-	if (sz(pnts) == 1)
-		return;
-	convex.push_back(pnts[1]);
-	for (int i = 2; i <= sz(pnts); i++) {
-		point c = pnts[i % sz(pnts)];
-		while (sz(convex) > 1) {
-			point b = convex.back();
-			point a = convex[sz(convex) - 2];
-			if (cross(vec(b,a),vec(b,c)) < -EPS)
-				break;
-			convex.pop_back();
-		}
-		if (i < sz(pnts))
-			convex.push_back(pnts[i]);
-	}
+void circle2(const point& p1, const point& p2, point& cen, long double& r) {
+	cen = mid(p1, p2);
+	r = length(vec(p1,p2)) / 2;
 }
-int n,m;
-long double gets(vector<point> pts){
-	// if all points collinear ( or there is just 1 or 2 points), return answer
-	sortAntiClockWise(pts);
-	bool coll=1;
-	lop(i,sz(pts)-2){
-		if(!colliner(pts[i],pts[i+1],pts[i+2]))coll=0;
-	}
-	if(coll){
-		return length(vec(pts.back(),pts[0]))*2+2*pi*m;
-	}
-	vector<point> convex;
-	convexHull(pts,convex);
-	long double ret=0;
-	lop(i,convex.size()){
-		point a=convex[i];
-		point b=convex[(i+1)%convex.size()];
-		point c=convex[(i+2)%convex.size()];
-		point v1=vec(b,a);
-		point v2=vec(b,c);
-		long double theta=pi-acos(dot(v1,v2)/(length(v1)*length(v2)));
-		ret+=length(v1)+theta*m;
-	}
-	return ret;
 
+bool circle3(const point& p1, const point& p2, const point& p3, point& cen,
+		long double& r) {
+	point m1 = mid(p1, p2);
+	point m2 = mid(p2, p3);
+	point perp1 = perp(vec(p1,p2));
+	point perp2 = perp(vec(p2,p3));
+	bool res = intersect(m1, m1 + perp1, m2, m2 + perp2, cen);
+	r = length(vec(cen,p1));
+	return res;
 }
-const int N=9;
-vector<vector<point>> vec;
+STATE circlePoint(const point & cen, const long double & r, const point& p) {
+	long double lensqr = lengthSqr(vec(cen,p));
+	if (fabs(lensqr - r * r) < EPS)
+		return BOUNDRY;
+	if (lensqr < r * r)
+		return IN;
+	return OUT;
+}
+
+const int N = 1e5 + 10;
+
+int n;
 point arr[N];
-long double solve(int cur){
-	if(cur==n){
-		long double ret=0;
-		lop(i,vec.size())
-			ret+=gets(vec[i]);
-		return ret;
+vector<point> r;
+long double rd;
+point cen;
+
+void mec() {
+	if (!n || r.size() == 3) {
+		if (r.size() == 1) {
+			cen = r[0];
+			rd = 0;
+		} else if (r.size() == 2) {
+			circle2(r[0],r[1],cen,rd);
+		} else if(r.size()==3){
+			circle3(r[0],r[1],r[2],cen,rd);
+		}
+		return;
 	}
-	long double ret=1e18;
-	lop(i,vec.size()){
-		vec[i].push_back(arr[cur]);
-		ret=min(ret,solve(cur+1));
-		vec[i].pop_back();
+	n--;
+	mec();
+	if (circlePoint(cen, rd, arr[n]) == OUT) {
+		r.push_back(arr[n]);
+		mec();
+		r.pop_back();
 	}
-	vec.push_back(vector<point>(1,arr[cur]));
-	ret=min(ret,solve(cur+1));
-	vec.pop_back();
-	return ret;
+	n++;
+
 }
 int main() {
 #ifndef ONLINE_JUDGE
 	freopen("i.txt", "r", stdin);
 #endif
-	int tc=1;
-	while(sc(n),sc(m),n||m){
+	int t;
+	sc(t);
+	while (t--) {
+		rd=0;
+		sc(n);
 		lop(i,n){
 			long double x,y;
-			cin>>x>>y;
+			scanf("%Lf %Lf", &x, &y);
 			arr[i]=point(x,y);
 		}
-		vec.clear();
-		vec.push_back(vector<point>(1,arr[0]));
-		printf("Case %d: length = %.2Lf\n",tc++,solve(1));
+		srand(time(0));
+		random_shuffle(arr, arr + n);
+		mec();
+		printf("%.2LF\n%.2LF %.2LF\n",rd,cen.X,cen.Y);
 
 	}
+
 }
