@@ -1,0 +1,245 @@
+/*
+  let changes[j][k] = 1 if cell [j][k] doesnt have the same value in all of the input data
+  if a cell changes in input, this implies that it is working correctly
+  iterate all possible starts(0:00 -> 23:59) 
+  compare clock(s) wiht input(0) , clock(s+1) with input(1) and so on
+  if changes[j][k]=1 and it missmatches anywhere then this start is impossible
+  otherwise this start is possible, if a cell that doesnt change at all missmatches anywhere, then we found a case where
+  this cell is broken.
+  if a cell that doesnt change matches everywhere, then we found a case where this cell is either working correctly or is broken
+  if a cell is broken in some case and working correctly in some case then it's answer is '?'
+*/
+
+#include<bits/stdc++.h>
+using namespace std;
+
+#define scl(x) scanf("%lld",&x)
+#define sc(x)  scanf("%d",&x)
+#define ll long long
+#define lop(i,n) for(int i=0;i<n;++i)
+typedef pair<int, int> ii;
+typedef pair<ll, ll> pll;
+
+vector<string> digits[10];
+void pre(){
+	digits[0]=
+	{".XX.",
+	 "X..X",
+	 "X..X",
+	 "....",
+	 "X..X",
+	 "X..X",
+	 ".XX."
+	};
+	digits[1]=
+		{"....",
+		 "...X",
+		 "...X",
+		 "....",
+		 "...X",
+		 "...X",
+		 "...."
+		};
+	digits[2]=
+		{".XX.",
+		 "...X",
+		 "...X",
+		 ".XX.",
+		 "X...",
+		 "X...",
+		 ".XX."
+		};
+	digits[3]=
+		{".XX.",
+		 "...X",
+		 "...X",
+		 ".XX.",
+		 "...X",
+		 "...X",
+		 ".XX."
+		};
+	digits[4]=
+		{"....",
+		 "X..X",
+		 "X..X",
+		 ".XX.",
+		 "...X",
+		 "...X",
+		 "...."
+		};
+	digits[5]=
+		{".XX.",
+		 "X...",
+		 "X...",
+		 ".XX.",
+		 "...X",
+		 "...X",
+		 ".XX."
+		};
+	digits[6]=
+		{".XX.",
+		 "X...",
+		 "X...",
+		 ".XX.",
+		 "X..X",
+		 "X..X",
+		 ".XX."
+		};
+	digits[7]=
+		{".XX.",
+		 "...X",
+		 "...X",
+		 "....",
+		 "...X",
+		 "...X",
+		 "...."
+		};
+	digits[8]=
+		{".XX.",
+		 "X..X",
+		 "X..X",
+		 ".XX.",
+		 "X..X",
+		 "X..X",
+		 ".XX."
+		};
+	digits[9]=
+		{".XX.",
+		 "X..X",
+		 "X..X",
+		 ".XX.",
+		 "...X",
+		 "...X",
+		 ".XX."
+		};
+
+}
+vector<string> times[24*60+5];
+void append(vector<string> & vec, int val){
+	if(!vec.size())vec=vector<string>(7,"");
+	lop(i,7)vec[i]+=digits[val][i];
+}
+void appendd(vector<string> & vec,bool m){
+	if(!vec.size())vec=vector<string>(7,"");
+	lop(i,7){
+		if(m&&(i==2||i==4))vec[i]+='X';
+		else vec[i]+='.';
+	}
+
+}
+bool mok[7][21];
+bool mbroken[7][21];
+bool changes[7][21];
+bool gridchar[7][21];
+int n;
+vector<string> data[105];
+void pr(vector<string> vec){
+	lop(i,vec.size())cout<<vec[i]<<endl;
+	cout<<endl;
+}
+int main(){
+#ifndef ONLINE_JUDGE
+	freopen("i.txt","r",stdin);
+#endif
+	pre();
+	int cnt=0;
+	for(int h0=0;h0<=2;h0++)
+		for(int h1=0;h1<(h0==2 ? 4:10);h1++)
+			for(int m0=0;m0<6;m0++)
+				for(int m1=0;m1<10;m1++){
+					if(h0)append(times[cnt],h0);
+					else lop(i,4)appendd(times[cnt],0);
+					appendd(times[cnt],0);
+					append(times[cnt],h1);
+					appendd(times[cnt],0);
+					appendd(times[cnt],1);
+					appendd(times[cnt],0);
+					append(times[cnt],m0);
+					appendd(times[cnt],0);
+					append(times[cnt],m1);
+					cnt++;
+				}
+	//cout<<cnt<<endl;
+	//pr(times[0]);
+	//pr(times[59]);
+	//pr(times[60]);
+	//pr(times[23*60+59]);
+	lop(j,7)lop(k,21)gridchar[j][k]=1;
+	lop(i,cnt){
+		lop(j,7)lop(k,21)
+			if(times[i][j][k]!='.')gridchar[j][k]=0;
+	}
+	gridchar[1][0]=0;
+	gridchar[2][0]=0;
+	sc(n);
+	lop(i,n){
+		data[i]=vector<string> (7,"");
+		lop(j,7)cin>>data[i][j];
+	}
+	lop(i,n-1){
+		lop(j,7)lop(k,21){
+			if(data[i][j][k]!=data[i+1][j][k])
+				changes[j][k]=1;
+		}
+	}
+	bool any=0;
+	for(int s=0;s<cnt;s++){
+		bool ok=1;
+		lop(i,n){
+			lop(j,7)lop(k,21){
+				if(changes[j][k]&&data[i][j][k]!=times[(s+i)%cnt][j][k]){
+					ok=0;
+					break;
+				}
+			}
+			if(!ok)break;
+		}
+		if(!ok)continue;
+		//cout<<s/60<<" "<<s%60<<endl;
+		//pr(times[s]);
+		any=1;
+		lop(i,n)lop(j,7)lop(k,21)
+				if(!changes[j][k]&&data[i][j][k]!=times[(s+i)%cnt][j][k])
+					mbroken[j][k]=1;
+		lop(j,7)lop(k,21){
+			if(changes[j][k])continue;
+			bool everywhere=1;
+			lop(i,n){
+				if(data[i][j][k]!=times[(s+i)%cnt][j][k])
+					everywhere=0;
+			}
+			if(everywhere)
+				mbroken[j][k]=mok[j][k]=1;
+		}
+	}
+	//cout<<mok[1][3]<<" "<<mbroken[1][3]<<endl;
+	if(!any)puts("impossible");
+	else lop(j,7)lop(k,21){
+		if(gridchar[j][k])printf(".");
+		else if(changes[j][k])printf("W");
+		else if(mok[j][k]&&mbroken[j][k])printf("?");
+		else if(mok[j][k])printf("W");
+		else if(mbroken[j][k])printf(( (data[0][j][k]=='.') ? "0":"1"));
+		if(k==20)puts("");
+	}
+
+}
+/*
+
+.??...WW.....??...??.
+?..?.W..?...?..1.0..?
+?..?.W..?.?.?..1.0..?
+.??...??.....11...WW.
+?..?.W..?.0.W..?.1..?
+?..?.W..?...W..?.1..?
+.??...11.....??...??.
+
+.??.
+?..?
+?..?
+.??.
+?..?
+?..?
+.??.
+
+ */
