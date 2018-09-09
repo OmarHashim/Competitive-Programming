@@ -1,0 +1,142 @@
+#include<bits/stdc++.h>
+using namespace std;
+
+#define scl(x) scanf("%lld",&x)
+#define sc(x)  scanf("%d",&x)
+#define ll long long
+#define lop(i,n) for(int i=0;i<n;++i)
+typedef pair<int, int> ii;
+typedef pair<ll, ll> pll;
+
+const int mN=500,mE=5e4+100;
+const int oo=1e9;
+int src,snk,cap[mE];
+int head[mN],headcpy[mN],nxt[mE],to[mE],edgeCnt;
+void init(){
+	memset(head,-1,sizeof head);
+	edgeCnt=0;
+}
+void addedge(int u,int v,int c){
+	nxt[edgeCnt]=head[u];
+	head[u]=edgeCnt;
+	cap[edgeCnt]=c;
+	to[edgeCnt++]=v;
+}
+void addbiedge(int u,int v,int c){
+	addedge(u,v,c);
+	addedge(v,u,0);
+}
+int Rank[mN];
+int ddfs(int cur=src,int flow=oo){
+	if(cur==snk)return flow;
+	for(int &i=headcpy[cur];i!=-1;i=nxt[i]){
+		int t=to[i];
+		if(!cap[i]||Rank[t]!=Rank[cur]+1)
+			continue;
+		int f=ddfs(t,min(flow,cap[i]));
+		cap[i]-=f;
+		cap[i^1]+=f;
+		if(f)
+			return f;
+	}
+	return 0;
+}
+int Q[mN];
+bool dbfs(){
+	memset(Rank,-1,sizeof Rank);
+	int Qi=0;
+	Q[Qi++]=src;
+	Rank[src]=0;
+	for(int i=0;i<Qi;++i){
+		int cur=Q[i];
+		int r=Rank[cur];
+		for(int j=head[cur];j!=-1;j=nxt[j]){
+			int t=to[j];
+			if(!cap[j]||Rank[t]!=-1)
+				continue;
+			Rank[t]=r+1;
+			Q[Qi++]=t;
+			if(t==snk)
+				return 1;
+		}
+	}
+	return 0;
+}
+int dinic(){
+	int ret=0,f;
+	while(dbfs()){
+		memcpy(headcpy,head,sizeof head);
+		while(f=ddfs()){
+			ret+=f;
+		}
+	}
+	return ret;
+}
+const int N=105;
+int w[N],l[N],t[N],n,m;
+
+vector<int> out[N];
+int main(){
+#ifndef ONLINE_JUDGE
+	freopen("i.txt","r",stdin);
+#endif
+	sc(n);
+	lop(i,n)sc(w[i]),sc(l[i]);
+	sc(m);
+	lop(i,m)sc(t[i]);
+	src=2*n+m;
+	snk=src+1;
+	init();
+	lop(i,n){
+		addbiedge(2*i,2*i+1,1);
+		if(w[i]==0)
+			addbiedge(src,2*i,1);
+	}
+	lop(i,m)
+		addbiedge(2*n+i,snk,1);
+
+	lop(i,n)lop(j,n)
+			if(i!=j&&l[i]>=w[j]&&l[j]>l[i]&&w[j])
+				addbiedge(2*i+1,2*j,1);
+	lop(i,n)lop(j,m)
+			if(l[i]>=t[j])
+			addbiedge(2*i+1,2*n+j,1);
+
+	if(dinic()!=m)return puts("impossible");
+	//lop(i,2*n+m+2){
+	//	cout<<i<<" : ";
+	//	for(int j=head[i];j!=-1;j=nxt[j]){
+	//		cout<<"("<<to[j]<<","<<cap[j]<<") , ";
+	//	}
+	//	cout<<endl;
+
+//	}
+	for(int jj=head[src];jj!=-1;jj=nxt[jj]){
+		if(cap[jj])
+			continue;
+		int cur=to[jj];
+		vector<int> path;
+		path.push_back(cur);
+		bool ok=1;
+		while(ok&&cur<2*n){
+			ok=0;
+			for(int j=head[cur];j!=-1;j=nxt[j]){
+				int v=to[j];
+				if(!cap[j]&&v!=path.back()&&(v==(cur^1)||v>=2*n||l[v/2]>l[cur/2])){
+					cur=to[j];
+					ok=1;
+					break;
+				}
+			}
+			path.push_back(cur);
+		}
+		if(cur<2*n)continue;
+		for(int z=0;z+1<path.size();z+=2){
+			out[path.back()-2*n].push_back(path[z]/2);
+		}
+
+	}
+	lop(i,m)lop(j,out[i].size())
+			printf("%d%c",out[i][j]+1," \n"[j+1==out[i].size()]);
+
+}
