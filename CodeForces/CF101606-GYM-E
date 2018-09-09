@@ -1,0 +1,79 @@
+/*
+    put all buildings and departments in 1 array, sort that array by sz, in case of a match, put the departments before the buildings
+    then we can use dp[idx][rem] : state is the current index in the array, and how many "departments" that still havent matched
+    with a building, this will be (10^4)*(10^4) array so we need to use rolling table, and to construct the solution
+    we can use a (10^4)*(10^4) array of bits (bitset) which tells us for each state wether we buy this building or not.
+
+*/
+
+#include<bits/stdc++.h>
+using namespace std;
+
+#define scl(x) scanf("%lld",&x)
+#define sc(x)  scanf("%d",&x)
+#define ll long long
+#define lop(i,n) for(int i=0;i<n;++i)
+typedef pair<int, int> ii;
+typedef pair<ll, ll> pll;
+
+const int N=1e4+100;
+struct node{
+	int sz,cost,idx;
+	bool operator<(const node &b)const{
+		if(sz!=b.sz)return sz<b.sz;
+		return cost<b.cost;
+	}
+}arr[N];
+int n,m;
+int dp[2][N];
+bitset<N> take[N];
+int main(){
+#ifndef ONLINE_JUDGE
+	freopen("i.txt","r",stdin);
+#endif
+	sc(n),sc(m);
+	lop(i,n){
+		sc(arr[i].sz);
+		arr[i].cost=-1;
+		arr[i].idx=i;
+	}
+	for(int i=n;i<n+m;i++){
+		sc(arr[i].sz);
+		arr[i].idx=i-n;
+	}
+	for(int i=n;i<n+m;i++)
+		sc(arr[i].cost);
+	n+=m;
+	sort(arr,arr+n);
+	for(int rem=1;rem<=n;rem++)
+		dp[n&1][rem]=1e9;
+	for(int idx=n-1;idx>=0;idx--)
+		for(int rem=0;rem<=n;rem++){
+			if(arr[idx].cost==-1) { // department
+				dp[idx&1][rem]=dp[(idx+1)&1][rem+1];
+			}
+			else {
+				dp[idx&1][rem]=dp[(idx+1)&1][rem];
+				if(rem){
+					int ncost=arr[idx].cost+dp[(idx+1)&1][rem-1];
+					if(ncost<dp[idx&1][rem]){
+						dp[idx&1][rem]=ncost;
+						take[idx][rem]=1;
+					}
+				}
+			}
+		}
+	if(dp[0][0]>=1e8)return puts("impossible");
+	vector<int> left;
+	vector<ii> out;
+	lop(i,n){
+		if(arr[i].cost==-1)left.push_back(arr[i].idx);
+		else if(take[i][left.size()]){
+			out.push_back(ii(left.back(),arr[i].idx));
+			left.pop_back();
+		}
+	}
+	sort(out.begin(),out.end());
+	lop(i,out.size())printf("%d ",out[i].second+1);
+
+}
