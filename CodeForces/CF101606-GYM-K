@@ -1,3 +1,14 @@
+/*
+	it's a max flow problem but constructing the graph and finding the path isnt very simple, and need to use node split on cranes
+	for each crane, split it into two nodes, add an edge with flow one from node 2*i to node 2*i+1
+	for each crane with weight = 0 , add an edge from src node to it with flow 1 (src -> 2*i)
+	if crane i can carry crane j and l[j]>l[i] , we add edge from crane i to crane j (2*i+1 -> 2*j)
+	if crane i have l[i]>=t[j] for some building j , add edge from this crane to this building (2*i+1->2*n+j)
+	for each building add an edge from it to the snk with flow 1 (2*n+j -> snk)
+	then run max flow and construct the solution following the correct edges with capacity 0
+
+*/
+
 #include<bits/stdc++.h>
 using namespace std;
 
