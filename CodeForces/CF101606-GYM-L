@@ -1,0 +1,97 @@
+/*
+    for each lizard, we find the line connecting it with the t.v, in the form a*x+b*y+c=0, then each of these lines can be solved
+    independantly, we use a map where key is the values (a,b,c) and the value is a vector of lizards
+    for each line, sort lizards first by increasing x, then by increasing y(for vertical lines)
+    then each line looks like p1,p2,p3,..,t.v,pk,pk+1,pk+2....
+    we can solve for each side of the t.v independantly using LIS but we must use nlogn LIS algorithm
+*/
+
+#include <bits/stdc++.h>
+using namespace std;
+
+const int N = 1001001;
+
+typedef long long Long;
+typedef pair<Long, pair<Long, Long>> line;
+
+int Tx, Ty;
+int n, x[N], y[N], h[N];
+map<line, vector<int>> mp;
+
+int getLIS(vector<int>& vec) {
+	if (vec.empty()) {
+		return 0;
+	}
+
+	int len = 0;
+	vector<int> LIS(vec.size() + 1, INT_MAX);
+
+	for (int i = 0; i < vec.size(); ++i) {
+		int idx = lower_bound(LIS.begin(), LIS.end(), vec[i]) - LIS.begin();
+		LIS[idx] = vec[i];
+		len = max(len, idx);
+	}
+
+	return len + 1;
+}
+
+int solve(vector<int>& vec) {
+	vec.push_back(0);
+
+	sort(vec.begin(), vec.end(), [](int i, int j) {
+		if (x[i] == x[j])
+			return y[i] < y[j];
+		else
+			return x[i] < x[j];
+	});
+
+	int res = 0, t = min_element(vec.begin(), vec.end()) - vec.begin();
+
+	vector<int> tmp;
+	for (int i = t - 1; i >= 0; --i) {
+		tmp.push_back(h[vec[i]]);
+	}
+	res += getLIS(tmp);
+
+	tmp.clear();
+	for (int i = t + 1; i < vec.size(); ++i) {
+		tmp.push_back(h[vec[i]]);
+	}
+	res += getLIS(tmp);
+
+	return res;
+}
+
+int main() {
+	cin >> Tx >> Ty;
+	cin >> n;
+
+	x[0] = Tx, y[0] = Ty;
+
+	for (int i = 1; i <= n; ++i) {
+		scanf("%d %d %d", x + i, y + i, h + i);
+
+		Long a = Ty - y[i];
+		Long b = x[i] - Tx;
+		Long c = Tx * 1LL * y[i] - Ty * 1LL * x[i];
+
+		if (a < 0) {
+			a = -a, b = -b, c = -c;
+		} else if (a == 0 && b < 0) {
+			b = -b, c = -c;
+		} else if (a == 0 && b == 0 && c < 0) {
+			c = -c;
+		}
+
+		Long g = __gcd(abs(a), __gcd(abs(b), abs(c)));
+
+		mp[{ a / g, { b / g, c / g } }].push_back(i);
+	}
+
+	int ans = 0;
+	for (auto& l : mp) {
+		ans += solve(l.second);
+	}
+	cout << ans;
+	return 0;
+}
