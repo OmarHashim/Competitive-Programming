@@ -1,5 +1,8 @@
 /*
-    we can use minimization matrix power, remember not to use identity element
+    to use x edges, we first need to use x-1 edges, then add 1 more edge, so we combine answer for x-1 with iput matrix
+    to find answer for x, but to do this 10^9 times is too slow, so we use matrix power instead.
+    but using exactly k edges may not be optimal, if we wanna go from i to j, we can instead go from i to z in k edges,
+    then go from z to j in the shortest path possible, so we also need to use floyd to find all pairs shortest path
 
 */
 
