@@ -1,6 +1,6 @@
 /*
       we can binary search for each query, and check validity using dsu, which would be mlogm per query, 
-      but what if we solve for first iteration of binary search for all query, then second iteration and so on
+      but what if we solve for first iteration of binary search for all queries, then second iteration and so on
       we can build just 1 dsu and every time we are at the middle element of some query we will do the check for this query
       for this iteration, then overall complexity is mlogm
 
